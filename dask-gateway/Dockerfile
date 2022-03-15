@@ -12,6 +12,7 @@ LABEL MAINTAINER="Jim Crist-Harif"
 #        https://github.com/mamba-org/mamba for more info
 #
 ARG CONDA_VERSION=py39_4.10.3
+ARG CONDA_URL=https://repo.anaconda.com/miniconda/Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh
 
 # - Create user dask
 RUN useradd -m -U -u 1000 dask
@@ -27,8 +28,7 @@ RUN apt-get update \
 # - Cleanup conda files
 # - Uninstall miniconda build dependencies
 RUN ARCH=$(uname -m) \
-    && wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh" \
-    && mv "Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh" miniconda.sh \
+    wget --quiet "$CONDA_URL" -O miniconda.sh \
     && sh ./miniconda.sh -b -p /opt/conda \
     && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/dask/.profile \
