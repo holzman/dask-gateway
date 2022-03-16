@@ -1,17 +1,10 @@
 # ** A base miniconda image **
-FROM debian:bullseye-slim as miniconda
+ARG MINICONDA_IMAGE=quay.io/condaforge/miniforge3:4.11.0-4
+FROM $MINICONDA_IMAGE as miniconda
 LABEL MAINTAINER="Jim Crist-Harif"
 
-# List of conda versions: https://repo.anaconda.com/miniconda/
-#
-# Miniconda 4.9.2 has been chosen as it has a aarch64 release and hasn't
-# introduced a bug described in:
-# https://stackoverflow.com/questions/68213186/illegal-instruction-error-when-verifying-anaconda-miniconda-install
-#
 # FIXME: Use micromamba or mambaforge instead, see
 #        https://github.com/mamba-org/mamba for more info
-#
-ARG CONDA_VERSION=py39_4.10.3
 
 # - Create user dask
 RUN useradd -m -U -u 1000 dask
@@ -22,15 +15,9 @@ RUN apt-get update \
     && apt-get install -y tini wget bzip2 \
     && rm -rf /var/lib/apt/lists/*
 
-# - Download and install miniconda
 # - Configure conda to minimize automatic package updates
-# - Cleanup conda files
 # - Uninstall miniconda build dependencies
-RUN ARCH=$(uname -m) \
-    && wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh" \
-    && mv "Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh" miniconda.sh \
-    && sh ./miniconda.sh -b -p /opt/conda \
-    && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
+RUN ln -s -f /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/dask/.profile \
     && echo "conda activate base" >> /home/dask/.profile \
     && echo "always_yes: true" >> /home/dask/.condarc \
@@ -38,7 +25,6 @@ RUN ARCH=$(uname -m) \
     && echo "auto_update_conda: false" >> /home/dask/.condarc \
     && echo "aggressive_update_packages: []" >> /home/dask/.condarc \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
-    && /opt/conda/bin/conda clean -afy \
     && chown -R dask:dask /opt/conda
 
 USER 1000:1000
