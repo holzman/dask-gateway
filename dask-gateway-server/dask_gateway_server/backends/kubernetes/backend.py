@@ -371,10 +371,11 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             parent=self,
             name="cluster",
             client=self.custom_client,
-            method="list_cluster_custom_object",
+            method="list_namespaced_custom_object",
             method_kwargs=dict(
                 group="gateway.dask.org",
                 version=self.crd_version,
+                namespace=config.namespace,
                 plural="daskclusters",
                 label_selector=self.label_selector,
             ),
