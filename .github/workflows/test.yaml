@@ -128,8 +128,13 @@ jobs:
         include:
           - k3s-channel: v1.20
             upgrade-from: "0.9.0"
+            dask-namespace: default
           - k3s-channel: stable
+            dask-namespace: default
+          - k3s-channel: stable
+            dask-namespace: scheduler
           - k3s-channel: latest
+            dask-namespace: default
 
     steps:
       - uses: actions/checkout@v3
@@ -204,11 +209,13 @@ jobs:
 
       - name: helm install (or upgrade)
         run: |
+          TEST_DASK_GATEWAY_KUBE_NAMESPACE=${{ matrix.dask-namespace }}
           helm upgrade \
               test-dask-gateway \
               resources/helm/dask-gateway \
               --install \
               --values=resources/helm/testing/chart-install-values.yaml \
+              --set gateway.backend.namespace=${TEST_DASK_GATEWAY_KUBE_NAMESPACE} \
               --wait \
               --timeout 1m0s
 
