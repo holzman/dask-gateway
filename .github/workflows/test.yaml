@@ -125,13 +125,14 @@ jobs:
         # k3s-version: https://github.com/rancher/k3s/tags
         # k3s-channel: https://update.k3s.io/v1-release/channels
         #
+        dask-namespace: default
         include:
           - k3s-channel: v1.20
             upgrade-from: "0.9.0"
           - k3s-channel: stable
           - k3s-channel: latest
-          - namespace: default
-          - namespace: additional
+          - dask-namespace: additional
+
             
     steps:
       - uses: actions/checkout@v3
@@ -174,7 +175,7 @@ jobs:
               --include-crds \
               --values=resources/helm/testing/chart-install-values.yaml
 
-      - if: matrix.namespace == 'additional'
+      - if: matrix.dask-namespace == 'additional'
         run: |
           kubectl create namespace additional
           
@@ -192,7 +193,6 @@ jobs:
               --version=${{ matrix.upgrade-from }} \
               --values=chart-install-values.yaml \
               --wait \
-              --set gateway.backend.namespace=${{ matrix.namespace }} \
               --timeout 1m0s
 
       - working-directory: resources/helm
@@ -216,7 +216,7 @@ jobs:
               resources/helm/dask-gateway \
               --install \
               --values=resources/helm/testing/chart-install-values.yaml \
-              --set gateway.backend.namespace=${{ matrix.namespace }} \              
+              --set gateway.backend.namespace=${{ matrix.dask-namespace }} \
               --wait \
               --timeout 1m0s
 
