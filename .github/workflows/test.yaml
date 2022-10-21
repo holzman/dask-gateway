@@ -130,7 +130,9 @@ jobs:
             upgrade-from: "0.9.0"
           - k3s-channel: stable
           - k3s-channel: latest
-
+          - namespace: default
+          - namespace: additional
+            
     steps:
       - uses: actions/checkout@v3
         with:
@@ -172,6 +174,10 @@ jobs:
               --include-crds \
               --values=resources/helm/testing/chart-install-values.yaml
 
+      - if: matrix.namespace == 'additional'
+        run: |
+          kubectl create namespace additional
+          
       - name: helm install previous version ${{ matrix.upgrade-from }}
         if: matrix.upgrade-from != ''
         run: |
@@ -186,6 +192,7 @@ jobs:
               --version=${{ matrix.upgrade-from }} \
               --values=chart-install-values.yaml \
               --wait \
+              --set gateway.backend.namespace=${{ matrix.namespace }} \
               --timeout 1m0s
 
       - working-directory: resources/helm
@@ -209,6 +216,7 @@ jobs:
               resources/helm/dask-gateway \
               --install \
               --values=resources/helm/testing/chart-install-values.yaml \
+              --set gateway.backend.namespace=${{ matrix.namespace }} \              
               --wait \
               --timeout 1m0s
 
