@@ -5,7 +5,7 @@ apiVersion: v1
 metadata:
   name: {{ include "dask-gateway.traefikName" . }}
 ---
-kind: ClusterRole
+kind: {{ ternary "ClusterRole" "Role" .Values.rbac.clusterWideOperation }}
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.traefikName" . }}
@@ -53,17 +53,83 @@ rules:
       - list
       - watch
 ---
-kind: ClusterRoleBinding
+kind: {{ ternary "ClusterRoleBinding" "RoleBinding" .Values.rbac.clusterWideOperation }}
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.traefikName" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: {{ ternary "ClusterRole" "Role" .Values.rbac.clusterWideOperation }}
   name: {{ include "dask-gateway.traefikName" . }}
 subjects:
 - kind: ServiceAccount
   name: {{ include "dask-gateway.traefikName" . }}
   namespace: {{ .Release.Namespace }}
+
+{{- if and (not .Values.rbac.clusterWideOperation) (.Values.gateway.backend.namespace) (ne .Values.gateway.backend.namespace .Release.Namespace) }}
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "dask-gateway.traefikName" . }}
+  {{ include "dask-gateway.namespace" . | indent 2 }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+      - endpoints
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses/status
+    verbs:
+      - update
+  - apiGroups:
+      - traefik.io
+      - traefik.containo.us
+    resources:
+      - ingressroutes
+      - ingressroutetcps
+      - ingressrouteudps
+      - middlewares
+      - middlewaretcps
+      - serverstransports
+      - tlsoptions
+      - tlsstores
+      - traefikservices
+    verbs:
+      - get
+      - list
+      - watch
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "dask-gateway.traefikName" . }}
+  {{- include "dask-gateway.namespace" . | indent 2 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: {{ ternary "ClusterRole" "Role" .Values.rbac.clusterWideOperation }}
+  name: {{ include "dask-gateway.traefikName" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "dask-gateway.traefikName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
 {{- end }}
 {{- end }}

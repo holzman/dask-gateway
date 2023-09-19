@@ -8,31 +8,33 @@ metadata:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: {{ ternary "ClusterRole" "Role" .Values.rbac.clusterWideOperation }}
 metadata:
   name: {{ include "dask-gateway.apiName" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
+  {{- include "dask-gateway.namespace" . | indent 2 }}
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get"]
   - apiGroups: ["gateway.dask.org"]
     resources: ["daskclusters"]
-    verbs: ["*"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
 ---
-kind: ClusterRoleBinding
+kind: {{ ternary "ClusterRoleBinding" "RoleBinding" .Values.rbac.clusterWideOperation }}
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.apiName" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
+  {{- include "dask-gateway.namespace" . | indent 2 }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "dask-gateway.apiName" . }}
     namespace: {{ .Release.Namespace }}
 roleRef:
-  kind: ClusterRole
+  kind: {{ ternary "ClusterRole" "Role" .Values.rbac.clusterWideOperation }}
   name: {{ include "dask-gateway.apiName" . }}
   apiGroup: rbac.authorization.k8s.io
 {{- end }}

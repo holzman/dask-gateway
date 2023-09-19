@@ -9,18 +9,20 @@ metadata:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: {{ ternary "ClusterRole" "Role" .Values.rbac.clusterWideOperation }}
 metadata:
   name: {{ include "dask-gateway.controllerName" . }}
+  {{- include "dask-gateway.namespace" . | indent 2 }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
+
 rules:
   - apiGroups: ["gateway.dask.org"]
     resources: ["daskclusters", "daskclusters/status"]
-    verbs: ["*"]
+    verbs: ["get", "list", "watch", "patch", "delete"]
   - apiGroups: ["traefik.io"]
     resources: ["ingressroutes", "ingressroutetcps"]
-    verbs: ["get", "create", "delete"]
+    verbs: ["create"]
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch", "create", "delete"]
@@ -28,21 +30,25 @@ rules:
     resources: ["endpoints"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
-    resources: ["secrets", "services"]
+    resources: ["secrets"]
     verbs: ["create", "delete"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["create"]
 ---
-kind: ClusterRoleBinding
+kind: {{ ternary "ClusterRoleBinding" "RoleBinding" .Values.rbac.clusterWideOperation }}
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.controllerName" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
+  {{- include "dask-gateway.namespace" . | indent 2 }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "dask-gateway.controllerName" . }}
     namespace: {{ .Release.Namespace }}
 roleRef:
-  kind: ClusterRole
+  kind: {{ ternary "ClusterRole" "Role" .Values.rbac.clusterWideOperation }}
   name: {{ include "dask-gateway.controllerName" . }}
   apiGroup: rbac.authorization.k8s.io
 {{- end }}

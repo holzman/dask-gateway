@@ -50,6 +50,10 @@ spec:
             - "--providers.kubernetescrd"
             - "--providers.kubernetescrd.allowcrossnamespace=true"
             - '--providers.kubernetescrd.labelselector=gateway.dask.org/instance={{ include "dask-gateway.fullname" . }}'
+            {{- if not .Values.rbac.clusterWideOperation }}
+            - "--providers.kubernetescrd.namespaces={{ .Release.Namespace }}
+            {{- if .Values.gateway.backend.namespace }},{{ .Values.gateway.backend.namespace}}{{end}}"
+            {{- end }}
             - "--providers.kubernetescrd.throttleduration=2"
             - "--log.level={{ .Values.traefik.loglevel }}"
             - "--entrypoints.traefik.address=:9000"

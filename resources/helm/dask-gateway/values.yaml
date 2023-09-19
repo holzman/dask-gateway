@@ -288,6 +288,10 @@ rbac:
   # Whether to enable RBAC.
   enabled: true
 
+  # Whether to watch *all* namespaces for daskCluster objects, or
+  # only the single namespace (given by gateway.backend.namespace)
+  clusterWideOperation: false
+
   # Existing names to use if ClusterRoles, ClusterRoleBindings, and
   # ServiceAccounts have already been created by other means (leave set to
   # `null` to create all required roles at install time)

@@ -569,6 +569,7 @@ properties:
       - controller
       - gateway
       - traefik
+      - clusterWideOperation
     description: |
       `rbac` nested configuration relates to the choice of creating or replacing
       resources like (Cluster)Role, (Cluster)RoleBinding, and ServiceAccount.
@@ -577,6 +578,10 @@ properties:
         type: boolean
         description: |
           Whether to create RBAC resources.
+      clusterWideOperation:
+        type: boolean
+        description: |
+          Whether to enable cluster-wide operation.
       controller:
         type: object
         additionalProperties: false

@@ -367,17 +367,25 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
         self.clusters = {}
         self.username_to_clusters = defaultdict(dict)
         self.queue = WorkQueue()
+
+        _method = "list_cluster_custom_object"
+        _method_kwargs = dict(
+            group="gateway.dask.org",
+            version=self.crd_version,
+            plural="daskclusters",
+            label_selector=self.label_selector,
+        )
+
+        if os.environ.get("CLUSTERWIDE_OPERATION") == "false":
+            _method = "list_namespaced_custom_object"
+            _method_kwargs["namespace"] = os.environ.get("GATEWAY_NAMESPACE")
+
         self.informer = Informer(
             parent=self,
             name="cluster",
             client=self.custom_client,
-            method="list_cluster_custom_object",
-            method_kwargs=dict(
-                group="gateway.dask.org",
-                version=self.crd_version,
-                plural="daskclusters",
-                label_selector=self.label_selector,
-            ),
+            method=_method,
+            method_kwargs=_method_kwargs,
             on_update=self.on_cluster_event,
             on_delete=self.on_cluster_event,
         )

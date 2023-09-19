@@ -55,6 +55,13 @@ spec:
           volumeMounts:
             - mountPath: /etc/dask-gateway/
               name: configmap
+          env:
+            - name: CLUSTERWIDE_OPERATION
+              value: {{ .Values.rbac.clusterWideOperation | quote }}
+            {{- if not .Values.rbac.clusterWideOperation }}
+            - name: GATEWAY_NAMESPACE
+              value: {{ default .Release.Namespace .Values.gateway.backend.namespace | quote }}
+            {{- end }}
           ports:
             - containerPort: 8000
               name: api

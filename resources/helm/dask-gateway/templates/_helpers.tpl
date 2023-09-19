@@ -73,3 +73,13 @@ Controller name
 {{- define "dask-gateway.controllerName" -}}
 {{ include "dask-gateway.fullname" . | printf "controller-%s" | trunc 63 | trimSuffix "-" }}
 {{- end -}}
+
+{{/*
+Namespace name
+*/}}
+
+{{- define "dask-gateway.namespace" -}}
+{{- if not .Values.rbac.clusterWideOperation }}
+namespace: {{ default .Release.Namespace .Values.gateway.backend.namespace }}
+{{- end -}}
+{{- end -}}
