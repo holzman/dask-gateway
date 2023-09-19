@@ -54,6 +54,12 @@ spec:
             - mountPath: /etc/dask-gateway/
               name: configmap
           env:
+            - name: CLUSTERWIDE_OPERATION
+              value: {{ .Values.rbac.clusterWideOperation | quote }}
+            {{- if not .Values.rbac.clusterWideOperation }}
+            - name: GATEWAY_NAMESPACE
+              value: {{ default .Release.Namespace .Values.gateway.backend.namespace | quote}}
+            {{- end }}
             {{- with .Values.gateway.env }}
             {{- . | toYaml | nindent 12 }}
             {{- end }}
